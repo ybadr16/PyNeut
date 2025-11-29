@@ -9,9 +9,9 @@ A Python-based Monte Carlo code for simulating neutron transport through various
 
 ## Quick Links
 
-- [📖 API Reference](api-reference.md) - Complete function documentation
-- [💻 GitHub Repository](https://github.com/yourusername/monte-carlo-shielding)
-- [🐛 Report Issues](https://github.com/yourusername/monte-carlo-shielding/issues)
+- [📖 API Reference](api-reference) - Complete function documentation
+- [💻 GitHub Repository](https://github.com/yourusername/PYNEUT)
+- [🐛 Report Issues](https://github.com/yourusername/PYNEUT/issues)
 
 ---
 
