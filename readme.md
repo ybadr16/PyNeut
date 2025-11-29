@@ -1,4 +1,4 @@
-# Monte Carlo Neutron Transport Simulation
+# PYNEUT - Python Neutronics
 
 A Python-based Monte Carlo code for simulating neutron transport through various materials and geometries. **Intended for educational purposes only.**
 
@@ -126,12 +126,8 @@ src/
 
 ## Usage Examples
 
-See `QUICK_START.md` for detailed examples including:
-- Slab shielding transmission
-- Detector response calculations
-- Energy spectrum analysis
-- Trajectory visualization
-- Parametric studies
+See `QUICK_START.md` for examples including:
+
 
 ## Documentation
 
@@ -141,47 +137,24 @@ See `QUICK_START.md` for detailed examples including:
 - `BUGS_AND_IMPROVEMENTS.md` - Known issues and planned improvements
 - `CRITICAL_FIXES.md` - Important bug fixes to apply
 
-## Important Notes
-
-### ⚠️ Critical Bugs to Fix
-
-Before using this code for research, apply the fixes in `CRITICAL_FIXES.md`:
-
-1. **Cylinder.normal() indentation bug** - Method is currently inaccessible
-2. **Plane sign convention** - Inconsistent normalization can cause geometry errors
-3. **Missing fission handling** - Fission events not properly processed
-4. **Region detection counting** - Counts steps instead of unique particles
-
-**Quick fix:**
-```bash
-cp medium_FIXED.py src/medium.py
-cp simulation_FIXED.py src/simulation.py
-python test_fixes.py  # Verify fixes work
-```
 
 ### Validation Status
 
-⚠️ **This code has not been validated against established Monte Carlo codes (MCNP, OpenMC, etc.)**
-
-Before trusting results for research:
-1. Apply critical bug fixes
-2. Run verification tests (`test_fixes.py`)
-3. Compare with analytical solutions for simple cases
-4. Benchmark against established codes
+⚠️ **This code has not yet been validated against established Monte Carlo codes (MCNP, OpenMC, etc.), but it is in the plan**
 
 ## Limitations
 
 - Single isotope per region (no material mixtures)
 - Isotropic scattering in center-of-mass frame only
 - Fixed temperature (294K) for thermal motion
-- No secondary particle generation from fission
+- No secondary particle generation from fission yet
 - Mono-energetic source only
 
 ## Physics Models
 
 - **Elastic scattering**: Includes thermal motion effects via Maxwell-Boltzmann sampling
 - **Absorption**: Radiative capture (MT=102)
-- **Fission**: Basic tracking (no daughter neutrons)
+- **Fission**: Basic tracking (no daughter neutrons) - Intended to be implemented
 - **Cross sections**: Microscopic data from ENDF/B-VIII, interpolated linearly
 
 ## Performance
@@ -191,19 +164,6 @@ Typical performance on modern CPU:
 - Scales linearly with CPU cores via multiprocessing
 - Memory: ~100 MB for 1000 particles with trajectory tracking
 
-## Testing
-
-Run the test suite to verify code correctness:
-
-```bash
-python test_fixes.py
-```
-
-Tests include:
-- Geometry intersection calculations
-- Physics conservation laws
-- Cross section reader functionality
-- Direction normalization
 
 ## Contributing
 
@@ -214,8 +174,9 @@ This is an educational project. Improvements welcome, especially:
 - Better error handling and input validation
 
 ## Future Work
-
-See `BUGS_AND_IMPROVEMENTS.md` for detailed roadmap:
+- Validation in simple analytical problems
+- Validation against other MC codes
+- Full fission Implementation
 - Material mixtures
 - Multi-group energy structure
 - Variance reduction techniques
@@ -226,12 +187,13 @@ See `BUGS_AND_IMPROVEMENTS.md` for detailed roadmap:
 ## References
 
 - ENDF/B-VIII Nuclear Data: https://www.nndc.bnl.gov/endf/
-- Monte Carlo Methods: Lux & Koblinger, "Monte Carlo Particle Transport Methods"
+- OpenMC Documentation: https://docs.openmc.org/en/stable/methods/index.html
 - Neutron Physics: Duderstadt & Hamilton, "Nuclear Reactor Analysis"
+- Computational Methods in Reactor Shielding: James Wood
 
 ## License
 
-[Add your license here]
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)MIT
 
 ## Contact
 
