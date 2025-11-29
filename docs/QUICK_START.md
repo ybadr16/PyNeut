@@ -6,7 +6,7 @@ Step-by-step examples for common use cases.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/monte-carlo-shielding.git
+git clone https://github.com/ybadr16/PYNEUT
 cd monte-carlo-shielding
 ```
 
