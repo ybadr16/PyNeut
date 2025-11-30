@@ -1,4 +1,4 @@
-# PYNEUT - Python Neutronics
+# PyNeut - Python Neutronics
 
 A Python-based Monte Carlo code for simulating neutron transport through various materials and geometries. **Intended for educational purposes only.**
 
@@ -193,7 +193,8 @@ This is an educational project. Improvements welcome, especially:
 
 ## License
 
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)MIT
+
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ## Contact
 

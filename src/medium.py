@@ -20,30 +20,33 @@ class Region:
         self.is_void = is_void
         self.element = element
 
-    def contains(self, x, y, z):
-        evaluations = []
-        for surface in self.surfaces:
-            if isinstance(surface, Region):
-                evaluations.append(surface.contains(x, y, z))
-            else:
-                eval_result = surface.evaluate(x, y, z) <= 0
-                evaluations.append(eval_result)
+    def contains(self, x, y, z, tolerance=1e-9):
+            evaluations = []
+            for surface in self.surfaces:
+                if isinstance(surface, Region):
+                    # Pass the tolerance down recursively to nested regions
+                    evaluations.append(surface.contains(x, y, z, tolerance))
+                else:
+                    # THE FIX: Check against tolerance instead of 0
+                    # This treats 0.000000001 as "inside" (effectively on the surface)
+                    eval_result = surface.evaluate(x, y, z) <= tolerance
+                    evaluations.append(eval_result)
 
-        if self.operation == "intersection":
-            return all(evaluations)
-        elif self.operation == "union":
-            return any(evaluations)
-        elif self.operation == "complement":
-            return not evaluations[0]
-        elif self.operation == "difference":
-            # A - B = A ∩ ¬B
-            if len(self.surfaces) != 2:
-                raise ValueError("Difference operation requires exactly two surfaces")
-            a = evaluations[0]
-            b = evaluations[1]
-            return a and not b
-        else:
-            raise ValueError(f"Unknown operation: {self.operation}")
+            if self.operation == "intersection":
+                return all(evaluations)
+            elif self.operation == "union":
+                return any(evaluations)
+            elif self.operation == "complement":
+                return not evaluations[0]
+            elif self.operation == "difference":
+                # A - B = A ∩ ¬B
+                if len(self.surfaces) != 2:
+                    raise ValueError("Difference operation requires exactly two surfaces")
+                a = evaluations[0]
+                b = evaluations[1]
+                return a and not b
+            else:
+                raise ValueError(f"Unknown operation: {self.operation}")
 
     def add_surface(self, surface):
         """Add a surface to the region."""

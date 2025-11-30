@@ -8,9 +8,9 @@ A Python-based Monte Carlo code for simulating neutron transport through various
 ---
 
 ## Quick Links
-- [📖 API Reference](https://ybadr16.github.io/PYNEUT/api-reference) - Complete function documentation
-- [💻 GitHub Repository](https://github.com/ybadr16/PYNEUT)
-- [🐛 Report Issues](https://github.com/ybadr16/PYNEUT/issues)
+- [📖 API Reference](https://ybadr16.github.io/PyNeut/api-reference) - Complete function documentation
+- [💻 GitHub Repository](https://github.com/ybadr16/PyNeut)
+- [🐛 Report Issues](https://github.com/ybadr16/PyNeut/issues)
 
 ---
 
@@ -27,12 +27,12 @@ A Python-based Monte Carlo code for simulating neutron transport through various
 ## Installation
 
 ```bash
-git clone https://github.com/ybadr16/PYNEUT.git
-cd PYNEUT
+git clone https://github.com/ybadr16/PyNeut.git
+cd PyNeut
 pip install -e .
 ```
 
-See [requirements.txt](https://github.com/ybadr16/PYNEUT/blob/main/requirements.txt) for dependencies.
+See [requirements.txt](https://github.com/ybadr16/PyNeut/blob/main/requirements.txt) for dependencies.
 
 ---
 
@@ -158,7 +158,7 @@ src/
 - No secondary particles from fission
 - Mono-energetic source
 
-See [GitHub Issues](https://github.com/ybadr16/PYNEUT/issues) for planned enhancements.
+See [GitHub Issues](https://github.com/ybadr16/PyNeut/issues) for planned enhancements.
 
 ---
 
@@ -186,7 +186,7 @@ Typical performance on modern CPU:
 ## Contributing
 
 Contributions welcome! Please:
-1. Check [existing issues](https://github.com/ybadr16/PYNEUT/issues)
+1. Check [existing issues](https://github.com/ybadr16/PyNeut/issues)
 2. Open a new issue to discuss major changes
 3. Submit pull requests
 
@@ -200,7 +200,7 @@ Contributions welcome! Please:
 Nuclear and Radiation Engineering  
 Alexandria University, Egypt
 
-[GitHub Repository](https://github.com/ybadr16/PYNEUT) • [Report Issues](https://github.com/ybadr16/PYNEUT/issues)
+[GitHub Repository](https://github.com/ybadr16/PyNeut) • [Report Issues](https://github.com/ybadr16/PyNeut/issues)
 
 ---
 
