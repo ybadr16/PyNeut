@@ -71,7 +71,7 @@ class Plane:
         return self.A * x + self.B * y + self.C * z + self.D
 
     def nearest_surface_method(self, x, y, z, u, v, w):
-        numerator = self.D - self.A*x - self.B*y - self.C*z
+        numerator = -self.D - self.A*x - self.B*y - self.C*z
         denominator = self.A*u + self.B*v + self.C*w
 
         if np.isclose(numerator, 0, atol=1e-8):

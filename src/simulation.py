@@ -1,4 +1,4 @@
-# simulation.py
+# src/simulation.py
 from .geometry import calculate_nearest_boundary, calculate_void_si_max
 from .physics import elastic_scattering, sample_new_direction_cosines
 import numpy as np
@@ -7,94 +7,79 @@ def simulate_single_particle(args):
     """
     Simulates a single particle and returns partial tally results.
     """
-    state, reader, mediums, A, N, sampler, region_bounds, track_coordinates, rng = args
+    # Unpack settings
+    state, reader, mediums, A, N, sampler, region_bounds, track_coordinates, rng, settings = args
 
-    # Call the updated simulate_particle function
-    result, absorbed, fissioned, _, final_energy, region_count, trajectory = simulate_particle(
-        state, reader, mediums, A, N, sampler, region_bounds, track_coordinates=track_coordinates, rng=rng
+    # Call the simulation kernel
+    result, absorbed_coords, fissioned, _, final_energy, region_count, trajectory, total_absorbed_weight = simulate_particle(
+        state, reader, mediums, A, N, sampler, region_bounds, track_coordinates=track_coordinates, rng=rng, settings=settings
     )
 
-    # Return results including trajectory if tracking was enabled
+    # Return results using the EXACT keys expected by Tally and Validation scripts
     return {
         "result": result,
-        "absorbed": absorbed,
+        "absorbed_weight": total_absorbed_weight,
+        "absorbed_coords": absorbed_coords,
         "fissioned": fissioned,
         "final_energy": final_energy,
+        "final_weight": state["weight"], # <--- ADDED: Needed for Consistency Validation
         "region_detected": region_count > 0,
         "trajectory": trajectory if track_coordinates else None,
     }
 
-def simulate_particle(state, reader, mediums, A, N, sampler, region_bounds=None, track_coordinates=False, rng= None):
+def simulate_particle(state, reader, mediums, A, N, sampler, region_bounds=None, track_coordinates=False, rng=None, settings=None):
     """
-    Simulate the trajectory of a single particle through multiple mediums.
-
-    Args:
-        state: Dictionary representing the particle's initial state.
-        reader: CrossSectionReader instance for cross-section data.
-        mediums: List of Medium instances defining the geometry.
-        A: Mass number of the target.
-        sampler: VelocitySampler instance for thermal effects.
-        region_bounds: Optional boundaries for a specific region.
-        track_coordinates: If True, records all particle coordinates during the simulation.
-
-    Returns:
-        result: Final state of the particle ("escaped", "absorbed", "fission").
-        absorbed_coordinates: List of absorption points.
-        fission_coordinates: List of fission points.
-        new_particles: List of newly generated particles (for fission).
-        final_energy: Particle's final energy.
-        region_count: Number of times the particle was detected in the region.
-        trajectory: List of all coordinates if track_coordinates is True, otherwise None.
+    Simulate the trajectory of a single particle.
     """
-    epsilon=1e-6
+    epsilon = 1e-6
     region_count = 0
     absorbed_coordinates = []
     fission_coordinates = []
     trajectory = [] if track_coordinates else None
+
+    # Track the accumulated weight absorbed (needed for Implicit Capture)
+    total_absorbed_weight = 0.0
+
+    # Geometry State Initialization
     x_prev, y_prev, z_prev = state["x"], state["y"], state["z"]
     u = np.sin(state["theta"]) * np.cos(state["phi"])
     v = np.sin(state["theta"]) * np.sin(state["phi"])
     w = np.cos(state["theta"])
+
     while True:
-        # Track coordinates if enabled
-
+        # 1. TRACKING
         if track_coordinates:
-            trajectory.append((state["x"], state["y"], state["z"]))#You can add other stuff for tracking, ex: sigma_s, sigma_a, Energy, etc..
+            trajectory.append((state["x"], state["y"], state["z"]))
 
-        # Determine the current medium based on highest priority
+        # 2. REGION DETECTION
         if region_bounds:
             x_min, x_max, y_min, y_max, z_min, z_max = region_bounds
             if x_min <= state["x"] <= x_max and y_min <= state["y"] <= y_max and z_min <= state["z"] <= z_max:
                 if not state.get("was_in_region", False):
                     region_count += 1
                     state["was_in_region"] = True
+
+        # 3. LOCATE CURRENT MEDIUM (Original robust loop)
         current_medium = None
         max_priority = -float('inf')
+
+        point_check = (state["x"], state["y"], state["z"])
         for medium in mediums:
-            point_check = (state["x"], state["y"], state["z"])
             if medium.contains(*point_check) and medium.priority > max_priority:
                 current_medium = medium
-                #print("This is inside medium check")
-                print(medium.name)
                 max_priority = medium.priority
-                #print(max_priority)
 
-        #print(medium.name, (state["x"], state["y"], state["z"]))
         if current_medium is None:
+            return "escaped", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory, total_absorbed_weight
 
-            #print("This is printing")
-
-            # Particle is outside all defined mediums, escapes
-            return "escaped", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory
-
+        # 4. NEAREST BOUNDARY
         nearest_point, nearest_medium, nearest_distance = calculate_nearest_boundary(state, mediums, u, v, w)
 
         if nearest_point is None:
-            return "escaped", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory
+            return "escaped", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory, total_absorbed_weight
 
-
+        # 5. VOID HANDLING
         if current_medium.is_void:
-            # Ensure nearest_point is valid before updating state
             if nearest_point is not None:
                 state["x"], state["y"], state["z"] = nearest_point
                 state["x"] += epsilon * u
@@ -102,16 +87,18 @@ def simulate_particle(state, reader, mediums, A, N, sampler, region_bounds=None,
                 state["z"] += epsilon * w
             continue
 
-        #print("This is not printing")
-
-        # Get cross-sections for the current medium
+        # 6. GET CROSS SECTIONS
         sigma_s, sigma_a, sigma_f, Sigma_t = reader.get_cross_sections(
             current_medium.element, state["energy"], sampler, N
         )
 
-        # Calculate distance to next interaction
-        si = -np.log(1 - rng.random()) / Sigma_t
+        # 7. SAMPLE DISTANCE
+        if Sigma_t <= 0:
+            si = float('inf')
+        else:
+            si = -np.log(1 - rng.random()) / Sigma_t
 
+        # 8. MOVE PARTICLE
         if si > nearest_distance:
             state["x"], state["y"], state["z"] = nearest_point
             state["x"] += epsilon * u
@@ -124,20 +111,71 @@ def simulate_particle(state, reader, mediums, A, N, sampler, region_bounds=None,
         state["z"] += si * w
         x_prev, y_prev, z_prev = state["x"], state["y"], state["z"]
 
-        # Check if particle has left the current medium
         if not current_medium.contains(state["x"], state["y"], state["z"]):
             continue
 
-        # Determine type of interaction
-        interaction_prob = rng.random()
-        if interaction_prob < sigma_s / Sigma_t:  # Scattering
-            state["has_interacted"] = True
-            E_prime, mu_cm, mu_lab = elastic_scattering(state["energy"], A, sampler, rng)
-            state["theta"] = np.arccos(mu_lab)
-            state["energy"] = E_prime
-            u, v, w, state["phi"] = sample_new_direction_cosines(u, v, w, mu_lab, rng)
+        # --- PHYSICS KERNEL ---
+        state["has_interacted"] = True
 
-        elif interaction_prob < (sigma_s + sigma_a) / Sigma_t:  # Absorption
-            state["has_interacted"] = True
-            absorbed_coordinates.append((state["x"], state["y"], state["z"]))
-            return "absorbed", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory
+        # === MODE SELECTION ===
+        if settings and settings.use_implicit_capture:
+            # === IMPLICIT CAPTURE ===
+
+            # A. Russian Roulette
+            if state["weight"] < settings.weight_cutoff:
+                if rng.random() < settings.roulette_survival_prob:
+                    state["weight"] /= settings.roulette_survival_prob
+                else:
+                    return "killed", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory, total_absorbed_weight
+
+            # B. Weight Reduction
+            if Sigma_t > 0:
+                p_absorb = (sigma_a + sigma_f) / Sigma_t
+                p_scatter = sigma_s / Sigma_t
+            else:
+                p_absorb = 0.0
+                p_scatter = 1.0
+
+            weight_loss = state["weight"] * p_absorb
+            total_absorbed_weight += weight_loss
+
+            if weight_loss > 0:
+                # Appending (x, y, z, weight_loss)
+                absorbed_coordinates.append((state["x"], state["y"], state["z"], weight_loss))
+
+            state["weight"] *= p_scatter
+
+            if state["weight"] <= 0:
+                 return "killed", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory, total_absorbed_weight
+
+        else:
+            # === ANALOG MONTE CARLO (Old Logic) ===
+            interaction_prob = rng.random()
+
+            # Calculate probabilities safely
+            p_scatter = sigma_s / Sigma_t if Sigma_t > 0 else 0
+            p_absorb = sigma_a / Sigma_t if Sigma_t > 0 else 0
+
+            if interaction_prob < p_scatter:
+                # Scattering
+                pass
+            elif interaction_prob < (p_scatter + p_absorb):
+                # Absorption
+                weight_deposited = state["weight"]
+                total_absorbed_weight += weight_deposited
+                absorbed_coordinates.append((state["x"], state["y"], state["z"], weight_deposited))
+
+                return "absorbed", absorbed_coordinates, fission_coordinates, None, state["energy"], region_count, trajectory, total_absorbed_weight
+
+            # Fission falls through here (Survival)
+
+        # --- SCATTERING KINEMATICS ---
+        E_prime, mu_cm, mu_lab = elastic_scattering(state["energy"], A, sampler, rng)
+
+        # Calculate new direction cosines
+        u, v, w, state["phi"] = sample_new_direction_cosines(u, v, w, mu_lab, rng)
+
+        # FIX: Update Global Theta using the new z-direction cosine (w)
+        # Using np.arccos(mu_lab) was incorrect (resetting to relative scattering angle)
+        state["theta"] = np.arccos(w)
+        state["energy"] = E_prime
