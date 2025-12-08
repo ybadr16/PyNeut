@@ -1,3 +1,4 @@
+### src/cross_section_read.py ###
 from .physics import calculate_E_cm_prime
 import os
 import h5py
@@ -10,11 +11,12 @@ class CrossSectionReader:
         :param base_path: Base directory where HDF5 files are located.
         """
         self.base_path = base_path
+        # Cache structure: {(element, mt): {'energy': np.array, 'xs': np.array}}
+        self._cache = {}
 
-    def get_cross_section(self, element: str, mt: int, energy: float) -> float:
+    def _load_data_to_cache(self, element: str, mt: int):
         """
-        Get the cross-section for a specific nuclide, reaction, and energy.
-        Handles both Global and Local energy grids.
+        Internal method to load data from HDF5 into memory cache.
         """
         # Validate inputs
         if not element.isalnum():
@@ -28,59 +30,67 @@ class CrossSectionReader:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"HDF5 file for {element} not found at {file_path}.")
 
-        # Paths
         reaction_group_path = f"{element}/reactions/reaction_{mt_str}/294K"
-        global_energy_path = f"{element}/energy/294K"
+        energy_path = f"{element}/energy/294K"
 
         try:
             with h5py.File(file_path, 'r') as f:
+                # Load energy data
+                if energy_path not in f:
+                    raise KeyError(f"Energy data path '{energy_path}' not found in HDF5 file.")
+                energy_data = f[energy_path][:]
+
+                # Load cross-section data
                 if reaction_group_path not in f:
-                    return 0.0
+                    raise KeyError(f"Reaction group path '{reaction_group_path}' not found in HDF5 file.")
 
-                rx_group = f[reaction_group_path]
+                xs_dataset = f[f"{reaction_group_path}/xs"]
+                xs_data = xs_dataset[:]
+                threshold_idx = xs_dataset.attrs.get('threshold_idx', 0)
 
-                # --- FIX START: Check for Local Energy Grid ---
-                if "energy" in rx_group:
-                    # CASE A: Use Local Grid (Exact Match)
-                    # This prevents the resonance shifting bug
-                    grid_energy = rx_group["energy"][:]
-                    grid_xs = rx_group["xs"][:]
+                # Validate threshold index
+                if not (0 <= threshold_idx < len(energy_data)):
+                    raise ValueError("Invalid threshold index in the HDF5 file.")
 
-                    if energy < grid_energy[0] or energy > grid_energy[-1]:
-                        return 0.0
+                # Construct the full cross-section array in memory
+                xs_full = np.zeros_like(energy_data)
+                xs_full[threshold_idx:threshold_idx + len(xs_data)] = xs_data
 
-                    return np.interp(energy, grid_energy, grid_xs)
-                # --- FIX END ---
-
-                else:
-                    # CASE B: Use Global Grid + Threshold (Old Logic)
-                    if global_energy_path not in f:
-                         raise KeyError(f"Energy data path '{global_energy_path}' not found.")
-
-                    global_energy = f[global_energy_path][:]
-                    xs_data = rx_group["xs"][:]
-                    threshold_idx = rx_group["xs"].attrs.get('threshold_idx', 0)
-
-                    # Safety check on indices
-                    if threshold_idx + len(xs_data) > len(global_energy):
-                        len_to_use = len(global_energy) - threshold_idx
-                        xs_data = xs_data[:len_to_use]
-
-                    # Slice the global grid
-                    relevant_energies = global_energy[threshold_idx : threshold_idx + len(xs_data)]
-
-                    if energy < relevant_energies[0]:
-                        return 0.0
-
-                    return np.interp(energy, relevant_energies, xs_data)
+                # Store in cache
+                self._cache[(element, mt)] = {
+                    'energy': energy_data,
+                    'xs': xs_full,
+                    'threshold_energy': energy_data[threshold_idx] if threshold_idx < len(energy_data) else 0.0
+                }
 
         except (OSError, KeyError, ValueError) as e:
-            if "reaction" in str(e) or "not found" in str(e):
-                return 0.0
-            raise RuntimeError(f"Error reading {element} MT={mt}: {e}") from e
+            raise RuntimeError(f"Error while reading HDF5 file: {e}") from e
+
+    def get_cross_section(self, element: str, mt: int, energy: float) -> float:
+        """
+        Get the cross-section for a specific nuclide, reaction, and energy using cached data.
+        """
+        cache_key = (element, mt)
+
+        # Lazy loading: If data isn't in memory, load it now
+        if cache_key not in self._cache:
+            self._load_data_to_cache(element, mt)
+
+        data = self._cache[cache_key]
+
+        # Optimization: Quick check for threshold
+        if energy < data['threshold_energy']:
+            return 0.0
+
+        # Fast in-memory interpolation
+        return np.interp(energy, data['energy'], data['xs'])
 
     def calculate_macroscopic_xs(self, microscopic_xs: float, number_density: float) -> float:
-        if microscopic_xs < 0: return 0.0
+        if microscopic_xs < 0:
+            raise ValueError("Microscopic cross section cannot be negative")
+        if number_density < 0:
+            raise ValueError("Number density cannot be negative")
+
         microscopic_xs_cm2 = microscopic_xs * 1e-24
         return microscopic_xs_cm2 * number_density
 
@@ -89,17 +99,25 @@ class CrossSectionReader:
         return self.calculate_macroscopic_xs(microscopic_xs, number_density)
 
     def get_cross_sections(self, element, energy, sampler, number_density):
-        # 1. Scattering (MT=2)
-        # Note: We use E_lookup = energy (Lab Frame) for XS lookup
-        E_lookup = energy
+        """
+        Get energy-dependent macroscopic cross sections for a given element and energy.
+        """
+        # Get microscopic cross-sections and convert to macroscopic
+        energy_cm = calculate_E_cm_prime(energy, 2.5, sampler)  # 2.5 is A for now
 
-        Sigma_s = self.get_macroscopic_xs(element, 2, E_lookup, number_density)
-        Sigma_a = self.get_macroscopic_xs(element, 102, E_lookup, number_density)
+        # Calculate each macroscopic cross section directly
+        # Note: We query the cache for MT=2 and MT=102
+        Sigma_s = self.get_macroscopic_xs(element, 2, energy_cm, number_density)     # Scattering
+        Sigma_a = self.get_macroscopic_xs(element, 102, energy, number_density)      # Radiative capture
 
         try:
-            Sigma_f = self.get_macroscopic_xs(element, 18, E_lookup, number_density)
-        except:
+            # Try to get fission, default to 0 if not found (lazy load will fail if file missing)
+            # However, for generic handling, we wrap the specific call
+            Sigma_f = self.get_macroscopic_xs(element, 18, energy, number_density)   # Fission
+        except (RuntimeError, KeyError):
+            # If the MT 18 doesn't exist in the file, we assume 0 fission
             Sigma_f = 0.0
 
         Sigma_t = Sigma_s + Sigma_a + Sigma_f
+
         return Sigma_s, Sigma_a, Sigma_f, Sigma_t

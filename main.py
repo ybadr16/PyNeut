@@ -7,7 +7,7 @@ from src.medium import Region, Plane, Cylinder
 from src.tally import Tally
 from src.random_number_generator import RNGHandler
 from src.settings import Settings
-from src.mesh import MeshTally  # <--- NEW IMPORT
+from src.mesh import MeshTally
 
 from multiprocessing import Pool
 import json
@@ -19,6 +19,25 @@ def main():
     # 1. SETUP
     base_path = "./endfb"
     reader = CrossSectionReader(base_path)
+
+    # --- OPTIMIZATION: PRE-LOAD CACHE ---
+    # We trigger the load here so the worker processes inherit
+    # the cached data, preventing every worker from reading the disk.
+    print("Pre-loading cross sections into memory...")
+    # Add any elements used in your 'mediums' list below
+    elements_to_load = ["B10"]
+
+    for elem in elements_to_load:
+        try:
+            # We request a dummy energy (1.0 eV) to trigger the file read
+            # MT=2 (Elastic), MT=102 (Capture) are the essentials
+            reader.get_cross_section(elem, 2, 1.0)
+            reader.get_cross_section(elem, 102, 1.0)
+            # reader.get_cross_section(elem, 18, 1.0) # Uncomment if using Fissionable material
+        except Exception as e:
+            print(f"Warning: Could not pre-load {elem}: {e}")
+    print("Pre-loading complete.")
+    # ------------------------------------
 
     #lead = Material(name="Lead", density=11.35, atomic_mass=208, atomic_weight_ratio=2.5)
     boron = Material(name="Boron", density=2.34, atomic_mass=10, atomic_weight_ratio=10.0)
