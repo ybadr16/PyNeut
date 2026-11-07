@@ -59,9 +59,9 @@ OpenMC, against analytic results and against ICSBEP critical benchmarks.
 | Check | Result |
 |-------|--------|
 | 16 fixed-source cases vs OpenMC 0.15 (Pb208, Fe56, Be9, Al27, C12, O16, Ni58, B10, Cd112; thermal to 14 MeV) | **16 OK, 0 warnings, 0 failures** (OK means within 2σ) |
-| ICSBEP Godiva / Jezebel-23 / Jezebel | k_eff within **0.8σ** of the benchmark and **1.3σ** of OpenMC |
-| Bare U235 spheres, R = 6 / 8.7 / 11 cm, vs OpenMC eigenvalue mode | z = 1.5 / 2.0 / 2.2 |
-| BEAVRS pin cell, k∞ with matched physics (5 seeds per code) | **+72 ± 98 pcm**, z = 0.74 |
+| ICSBEP Godiva / Jezebel-23 / Jezebel | k_eff within **0.4σ** of the benchmark and **0.4σ** of OpenMC |
+| Bare U235 spheres, R = 6 / 8.7 / 11 cm, vs OpenMC eigenvalue mode | z = 0.3 / 1.0 / 0.2 |
+| BEAVRS pin cell, k∞ with matched physics (5 seeds per code) | **+124 ± 81 pcm**, z = 1.5 |
 | B10 + C12 mixture vs OpenMC | leakage within 0.1σ, escape energy within 0.2σ |
 | Analytic: Beer–Lambert attenuation, elastic [α,1] and ξ | 13 / 13 pass |
 | Cross-section reader vs `openmc.data` (elastic, capture, (n,2n), and the total) | identical (0.000 %) for every isotope |
