@@ -4,7 +4,7 @@ PyNeut vs OpenMC — Ni58 validation case
 Cases
 -----
   ni58_sphere_14mev : Ni58 sphere R=5 cm, E=14 MeV (MT 28 and the (n,p)/(n,a)
-                      partials are a fifth of the total)
+                      partials are 40% of the total)
 
 OpenMC reference is computed live against the local data library.
 """
