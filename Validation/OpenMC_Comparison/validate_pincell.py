@@ -28,8 +28,8 @@ in PyNeut against 8,000 in OpenMC, 140 generations discarding the first 40, and
 five independent seeds per code. Because an all-reflective lattice has a
 dominance ratio near unity, the single-run standard error understates the true
 spread, so sigma is the spread across seeds rather than the batch-means error
-of one run. At those settings the reference result is PyNeut 1.29297 +/-
-0.00069 against OpenMC 1.29225 +/- 0.00069, a gap of +72 +/- 98 pcm (z = 0.74);
+of one run. At those settings the reference result is PyNeut 1.29056 +/-
+0.00074 against OpenMC 1.28932 +/- 0.00034, a gap of +124 +/- 81 pcm (z = 1.53);
 see pincell_reference.json, whose data_note records the nuclear-data snapshot
 those numbers belong to.
 

@@ -1,25 +1,25 @@
 <?xml version='1.0' encoding='utf-8'?>
 <model>
   <materials>
-    <material depletable="true" id="3">
-      <density units="atom/b-cm" value="0.040290139999999995"/>
-      <nuclide ao="0.9195053678145572" name="Pu239"/>
-      <nuclide ao="0.043464728591164" name="Pu240"/>
-      <nuclide ao="0.0028974831062885363" name="Pu241"/>
-      <nuclide ao="0.02051693044501707" name="Ga69"/>
-      <nuclide ao="0.013615490042973294" name="Ga71"/>
+    <material id="3" depletable="true">
+      <density value="0.040290139999999995" units="atom/b-cm"/>
+      <nuclide name="Pu239" ao="0.9195053678145572"/>
+      <nuclide name="Pu240" ao="0.043464728591164"/>
+      <nuclide name="Pu241" ao="0.0028974831062885363"/>
+      <nuclide name="Ga69" ao="0.02051693044501707"/>
+      <nuclide name="Ga71" ao="0.013615490042973294"/>
     </material>
   </materials>
   <geometry>
     <cell id="3" material="3" region="-3" universe="3"/>
-    <surface boundary="vacuum" coeffs="0.0 0.0 0.0 6.3849" id="3" type="sphere"/>
+    <surface id="3" type="sphere" boundary="vacuum" coeffs="0.0 0.0 0.0 6.3849"/>
   </geometry>
   <settings>
     <run_mode>eigenvalue</run_mode>
     <particles>3000</particles>
     <batches>120</batches>
     <inactive>20</inactive>
-    <source particle="neutron" strength="1.0" type="independent">
+    <source type="independent" strength="1.0" particle="neutron">
       <space type="box">
         <parameters>-6.3849 -6.3849 -6.3849 6.3849 6.3849 6.3849</parameters>
       </space>

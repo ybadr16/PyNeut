@@ -1,29 +1,29 @@
 {
  "data_manifest": {
-  "n_files": 48,
-  "total_bytes": 648988072,
-  "sha256": "99a54c1923e4de46"
+  "n_files": 50,
+  "total_bytes": 821046552,
+  "sha256": "410b18d0cbbd0590"
  },
  "pyneut_5seeds": {
-  "1": 1.29443,
-  "2": 1.29447,
-  "3": 1.29214,
-  "4": 1.29297,
-  "5": 1.29085
+  "1": 1.2932,
+  "2": 1.28948,
+  "3": 1.29117,
+  "4": 1.28948,
+  "5": 1.28947
  },
- "pyneut_mean": 1.29297,
- "pyneut_sem": 0.00069,
+ "pyneut_mean": 1.29056,
+ "pyneut_sem": 0.00074,
  "openmc_i40_5seeds": [
-  1.29315,
-  1.29349,
-  1.29147,
-  1.29327,
-  1.28989
+  1.28964,
+  1.28853,
+  1.29021,
+  1.28854,
+  1.28967
  ],
- "openmc_mean": 1.29225,
- "openmc_sem": 0.00069,
- "gap_pcm": 71.9,
- "z": 0.74,
+ "openmc_mean": 1.28932,
+ "openmc_sem": 0.00034,
+ "gap_pcm": 124.0,
+ "z": 1.53,
  "config": "5v5 seeds, N_pyn=3000 N_omc=8000, gens=140, inactive=40, matched physics",
- "data_note": "Regenerated 2026-08-02 by validate_pincell.py --save-reference against the endfb snapshot then on disk. A cross-code k_inf is a statement about a code pair AND a data snapshot: this lattice moves by ~330 pcm across an evaluation refresh, so values from different snapshots are not comparable."
+ "data_note": "Regenerated 2026-11-07 by validate_pincell.py --save-reference against the endfb snapshot then on disk. A cross-code k_inf is a statement about a code pair AND a data snapshot: this lattice moves by ~330 pcm across an evaluation refresh, so values from different snapshots are not comparable."
 }

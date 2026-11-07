@@ -265,28 +265,29 @@ generations and 20 inactive:
 
 | Sphere R (cm) | PyNeut k_eff | OpenMC k_eff | z | Status |
 |--------------:|-------------:|-------------:|--:|:------:|
-| 6.0 | 0.74347 ± 0.00220 | 0.7396 ± 0.0012 | 1.5 | OK |
-| 8.7 | 1.02999 ± 0.00250 | 1.0242 ± 0.0015 | 2.0 | OK |
-| 11.0 | 1.23619 ± 0.00311 | 1.2283 ± 0.0019 | 2.2 | WARN |
+| 6.0 | 0.73854 ± 0.00205 | 0.73915 ± 0.00119 | 0.3 | OK |
+| 8.7 | 1.02582 ± 0.00222 | 1.02332 ± 0.00139 | 1.0 | OK |
+| 11.0 | 1.22578 ± 0.00248 | 1.22636 ± 0.00165 | 0.2 | OK |
 
 <p align="center">
   <img src="images/keff_vs_radius.png" alt="k_eff versus bare U235 sphere radius for PyNeut and OpenMC" width="49%">
   <img src="images/keff_convergence.png" alt="Fission-source convergence of k_eff over successive generations" width="49%">
 </p>
 
-The radius sweep crosses k = 1 at **R ≈ 8.4 cm** (k = 1.0013 ± 0.0027). That
+The radius sweep crosses k = 1 at **R = 8.42 ± 0.01 cm**, from a weighted
+linear fit to the radii between 8.0 and 8.7 cm. That
 is the critical radius of *pure* U235 metal. Godiva's 8.7407 cm belongs to the
 93.7 %-enriched alloy, which also contains U238 and U234. PyNeut stays within
-z ≤ 2.2 of OpenMC over the range. That residual fits the use of a Watt χ
-instead of OpenMC's tabulated ENDF χ.
+z ≤ 1.0 of OpenMC over the range, even though it uses a Watt χ instead of
+OpenMC's tabulated ENDF χ.
 
 **ICSBEP fast-metal benchmarks** (`validate_keff.py --benchmarks`). Each one
 runs through both codes and is compared with the published k_eff ≡ 1.0000:
 
 | Benchmark | Fissile | PyNeut k_eff | OpenMC k_eff | z (OMC) | z (bench) |
 |-----------|:-------:|-------------:|-------------:|:-------:|:---------:|
-| Godiva (HEU-MET-FAST-001) | U235 | 1.0014 ± 0.0021 | 1.0000 ± 0.0013 | 0.6 | 0.6 |
-| Jezebel-23 (U233-MET-FAST-001) | U233 | 0.9981 ± 0.0020 | 1.0011 ± 0.0013 | 1.3 | 0.8 |
+| Godiva (HEU-MET-FAST-001) | U235 | 1.0008 ± 0.0017 | 1.0004 ± 0.0011 | 0.2 | 0.4 |
+| Jezebel-23 (U233-MET-FAST-001) | U233 | 1.0008 ± 0.0018 | 1.0007 ± 0.0013 | 0.1 | 0.4 |
 | Jezebel (PU-MET-FAST-001) | Pu239 | 1.0000 ± 0.0022 | 0.9991 ± 0.0012 | 0.4 | 0.0 |
 
 <p align="center">
@@ -295,8 +296,8 @@ runs through both codes and is compared with the published k_eff ≡ 1.0000:
        width="72%">
 </p>
 
-Across three fissile isotopes, PyNeut is within **0.8σ of the evaluated
-k_eff** and **1.3σ of OpenMC**. OpenMC itself lands within 0.7σ of every
+Across three fissile isotopes, PyNeut is within **0.4σ of the evaluated
+k_eff** and **0.4σ of OpenMC**. OpenMC itself lands within 0.5σ of every
 evaluated value, which confirms the benchmark specifications.
 
 ---
@@ -312,9 +313,9 @@ is repeated over five independent seeds:
 
 | | k∞ (mean of 5 seeds) |
 |--|--:|
-| PyNeut | 1.29297 ± 0.00069 |
-| OpenMC | 1.29225 ± 0.00069 |
-| difference | **+72 ± 98 pcm, z = 0.74** |
+| PyNeut | 1.29056 ± 0.00074 |
+| OpenMC | 1.28932 ± 0.00034 |
+| difference | **+124 ± 81 pcm, z = 1.53** |
 
 Source: `pincell_reference.json`. An earlier ~1500 pcm under-prediction was
 closed by the free-gas fixes. A later +580 pcm residual turned out to be a
